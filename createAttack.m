@@ -26,7 +26,7 @@ end
 toc;
 disp('Setting up optimization...');
 tic;
-Constraint = [mu_transpose_w == 1; sig_half_w' * sig_half_w <= rho^2; -mu_all(indices)-margin <= xb_s(indices) <= mu_all(indices)+margin; margin >= 0; ones(1,dd) * margin <= 30]; % + xb_s >= 0; mu_all - xb_s >= 0];
+Constraint = [mu_transpose_w == -t; sig_half_w' * sig_half_w <= rho^2; -mu_all(indices)-margin <= xb_s(indices) <= mu_all(indices)+margin; margin >= 0; ones(1,dd) * margin <= 30]; % + xb_s >= 0; mu_all - xb_s >= 0];
 toc;
 %% solve QP
 optimize(Constraint, Objective);
@@ -34,7 +34,7 @@ optimize(Constraint, Objective);
 disp('Extracting solution...');
 tic;
 w = V/D * double(sig_half_w);
-xb = ((1-epsilon) / epsilon) * (a * V * D * double(sig_half_w) - b * mu);
+xb = ((1-epsilon) / epsilon) * (a * V * D * double(sig_half_w) - b * mu); % should this be negative?
 toc;
 disp('Results:');
 fprintf(1, '\tObjective value: %.4f\n', double(Objective));
