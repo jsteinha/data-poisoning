@@ -3,8 +3,8 @@
 disp('setting up variables...');
 tic;
 epsilon = 0.04; %0.03;
-t = 1.3;
-rho = 2.4;
+t = 0.3;
+rho = 2.6;
 sig_half_w = sdpvar(r, 1);
 a = (1/sqrt(2*pi)) * exp(-0.5 * (1 + t)^2 / rho^2) / rho;
 b = normcdf((1+t)/rho);
@@ -26,7 +26,11 @@ end
 toc;
 disp('Setting up optimization...');
 tic;
-Constraint = [mu_transpose_w == 1; sig_half_w' * sig_half_w <= rho^2; -mu_all(indices)-margin <= xb_s(indices) <= mu_all(indices)+margin; margin >= 0; ones(1,dd) * margin <= 30]; % + xb_s >= 0; mu_all - xb_s >= 0];
+if dd ~= 0
+  Constraint = [mu_transpose_w == -t; sig_half_w' * sig_half_w <= rho^2; -mu_all(indices)-margin <= xb_s(indices) <= mu_all(indices)+margin; margin >= 0; ones(1,dd) * margin <= 30]; % + xb_s >= 0; mu_all - xb_s >= 0];
+else
+  Constraint = [mu_transpose_w == -t; sig_half_w' * sig_half_w <= rho^2];
+end
 toc;
 %% solve QP
 optimize(Constraint, Objective);
