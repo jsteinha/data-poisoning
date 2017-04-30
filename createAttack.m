@@ -38,7 +38,7 @@ optimize(Constraint, Objective);
 disp('Extracting solution...');
 tic;
 w = V/D * double(sig_half_w);
-xb = ((1-epsilon) / epsilon) * (a * V * D * double(sig_half_w) - b * mu);
+xb = ((1-epsilon) / epsilon) * (a * V * D * double(sig_half_w) - b * mu); % should this be negative?
 toc;
 disp('Results:');
 fprintf(1, '\tObjective value: %.4f\n', double(Objective));
