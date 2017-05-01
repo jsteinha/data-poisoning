@@ -1,7 +1,7 @@
 %load('imdb.mat');
 %load('xb_attack.mat');
-N_pert = round(0.10 * N_train);
-y_pert = sign(randn(N_pert,1));
+N_pert = round(0.20 * N_train);
+y_pert = 2*(rand(N_pert,1)<p_plus)-1;
 X_pert = sparse(N_pert,d);
 B = 50;
 for i=1:B:N_pert
