@@ -1,4 +1,4 @@
-function [ts, rhos, xb_full, p_attack, w] = createAttackProjMulticlass(k, epsilon, j_attack, j_target, ts, rhos, Psi_half, Sigma_projs, mu_projs, ps, Q)
+function [ts, rhos, xb_full, p_attack, w, Constraint, Objective] = createAttackProjMulticlass(k, epsilon, j_attack, j_target, ts, rhos, Psi_half, Sigma_projs, mu_projs, ps, Q)
   d_proj = size(Q,1);
   d = size(Q,2);
   disp('setting up variables...');
@@ -33,12 +33,15 @@ function [ts, rhos, xb_full, p_attack, w] = createAttackProjMulticlass(k, epsilo
   disp('pre-computing Sigma * w...');
   tic;
   Sig_w = cell(k,k);
+  Sig_half_w = cell(k,k);
 %  Sig_w_sym = cell(k,k);
   for j=1:k % parfor
     for j2=1:k
       if j ~= j2
           Sig_w{j,j2} = sdpvar(d_proj,1);
+          Sig_half_w{j,j2} = sdpvar(d_proj,1);
           Constraint = [Constraint; Sig_w{j,j2} == Sigma_projs{j} * (w0{j} - w0{j2})];
+          Constraint = [Constraint; Sig_half_w{j,j2} == sqrtm(Sigma_projs{j}) * (w0{j} - w0{j2})];
       end
     end
   end
@@ -57,7 +60,7 @@ function [ts, rhos, xb_full, p_attack, w] = createAttackProjMulticlass(k, epsilo
       if j ~= j2
 %dbstop if error
         partial_L{j} = partial_L{j} + ps(j) * (exp(-0.5*(1+ts(j,j2))^2/rhos(j,j2)^2) * Sig_w{j,j2} / rhos(j,j2) - normcdf((1+ts(j,j2))/rhos(j,j2)) * mu_projs(:,j));
-        rho_squared_sym{j,j2} = (w0{j}-w0{j2})' * Sig_w{j,j2};
+        rho_squared_sym{j,j2} = Sig_half_w{j,j2}' * Sig_half_w{j,j2}; %(w0{j}-w0{j2})' * Sig_w{j,j2};
         %partial_L{j} = partial_L{j} + ps(j) * (exp(-0.5*(1+ts(j,j2))^2/rhos(j,j2)^2) * Sigma_projs{j} * (w0{j} - w0{j2}) / rhos(j,j2) - normcdf((1+ts(j,j2))/rhos(j,j2)) * mu_projs(:,j));
         %rho_squared_sym{j,j2} = (w0{j}-w0{j2})' * Sigma_projs{j} * (w0{j}-w0{j2});
         %Constraint = [Constraint; rho_squared_sym{j,j2} <= rhos(j,j2)^2];
