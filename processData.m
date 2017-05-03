@@ -1,4 +1,4 @@
-function processData(X_train, y_train, X_test, y_test, name, r)
+function processData(X_train, y_train, X_test, y_test, name, r, include_mean)
   N_train = size(X_train, 1);
   N_test = size(X_test, 1);
   d = size(X_train, 2);
@@ -44,16 +44,19 @@ function processData(X_train, y_train, X_test, y_test, name, r)
 
   % potential function is x' * Psi * x
   % Psi_half is such that Psi = Psi_half' * Psi_half
-  C = 4;
+  C = 3 + logical(include_mean);
   Psi_half_init = cell(C,2);
   Psi_half_init{1,1} = eye(d_proj);
   Psi_half_init{1,2} = eye(d_proj); 
   Psi_half_init{2,1} = inv(Sigma_proj_plus);
   Psi_half_init{2,2} = inv(Sigma_proj_minus);
-  Psi_half_init{3,1} = (mu_plus - mu_minus)' * Q';
-  Psi_half_init{3,2} = (mu_plus - mu_minus)' * Q';
-  Psi_half_init{4,1} = ones(1,d) * Q';
-  Psi_half_init{4,2} = ones(1,d) * Q';
+  Psi_half_init{3,1} = ones(1,d) * Q';
+  Psi_half_init{3,2} = ones(1,d) * Q';
+  if include_mean
+    Psi_half_init{4,1} = (mu_plus - mu_minus)' * Q';
+    Psi_half_init{4,2} = (mu_plus - mu_minus)' * Q';
+  end
+
 
   taus = cell(C,2);
   N0  = min([1000, N_plus, N_minus]);
@@ -111,5 +114,10 @@ function processData(X_train, y_train, X_test, y_test, name, r)
   end
   toc;
   fprintf('tau_agg 0.75 quantiles:\n\tplus: %.4f\n\tminus: %.4f\n', quantile(tau_agg(:,1), 0.75), quantile(tau_agg(:,2), 0.75));
-  save(sprintf('process_data_results_%s_r%d.mat', name, r));
+  if include_mean
+      save(sprintf('process_data_results_%s_r%d.mat', name, r));
+  else
+      save(sprintf('process_data_results_%s_r%d_nomean.mat', name, r));
+  end
+
 end
