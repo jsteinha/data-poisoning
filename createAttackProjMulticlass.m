@@ -30,19 +30,36 @@ function [ts, rhos, xb_full, p_attack, w] = createAttackProjMulticlass(k, epsilo
 
   toc;
 
+  disp('pre-computing Sigma * w...');
+  tic;
+  Sig_w = cell(k,k);
+%  Sig_w_sym = cell(k,k);
+  for j=1:k % parfor
+    for j2=1:k
+      if j ~= j2
+          Sig_w{j,j2} = sdpvar(d_proj,1);
+          Constraint = [Constraint; Sig_w{j,j2} == Sigma_projs{j} * (w0{j} - w0{j2})];
+      end
+    end
+  end
+  toc;
+  
+  
   disp('building partial_L and rho_squared_sym...');
   tic;
 
   partial_L = cell(k,1);
   rho_squared_sym = cell(k,k);
   lambda = sdpvar(d_proj,1); % Lagrange multiplier since \sum_j w_j = 0
-  parfor j=1:k
+  for j=1:k % parfor
     partial_L{j} = lambda;
     for j2=1:k
       if j ~= j2
 %dbstop if error
-        partial_L{j} = partial_L{j} + ps(j) * (exp(-0.5*(1+ts(j,j2))^2/rhos(j,j2)^2) * Sigma_projs{j} * (w0{j} - w0{j2}) / rhos(j,j2) - normcdf((1+ts(j,j2))/rhos(j,j2)) * mu_projs(:,j));
-        rho_squared_sym{j,j2} = (w0{j}-w0{j2})' * Sigma_projs{j} * (w0{j}-w0{j2});
+        partial_L{j} = partial_L{j} + ps(j) * (exp(-0.5*(1+ts(j,j2))^2/rhos(j,j2)^2) * Sig_w{j,j2} / rhos(j,j2) - normcdf((1+ts(j,j2))/rhos(j,j2)) * mu_projs(:,j));
+        rho_squared_sym{j,j2} = (w0{j}-w0{j2})' * Sig_w{j,j2};
+        %partial_L{j} = partial_L{j} + ps(j) * (exp(-0.5*(1+ts(j,j2))^2/rhos(j,j2)^2) * Sigma_projs{j} * (w0{j} - w0{j2}) / rhos(j,j2) - normcdf((1+ts(j,j2))/rhos(j,j2)) * mu_projs(:,j));
+        %rho_squared_sym{j,j2} = (w0{j}-w0{j2})' * Sigma_projs{j} * (w0{j}-w0{j2});
         %Constraint = [Constraint; rho_squared_sym{j,j2} <= rhos(j,j2)^2];
       end
     end
@@ -99,7 +116,8 @@ function [ts, rhos, xb_full, p_attack, w] = createAttackProjMulticlass(k, epsilo
   toc;
 
   disp('solving optimization...');
-  optimize(Constraint, Objective);
+  opts = sdpsettings('verbose', 2);
+  optimize(Constraint, Objective, opts);
 
   disp('Extracting solution...');
   tic;
