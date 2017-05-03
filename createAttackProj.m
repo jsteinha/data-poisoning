@@ -1,4 +1,4 @@
-function [rho_plus, rho_minus, xb_plus, xb_minus] = createAttackProj(t, rho_plus, rho_minus, epsilon, Psi_half, Sigma_proj_plus, Sigma_proj_minus, mu_proj_plus, mu_proj_minus, p_plus, p_minus, Q, enforce_pos)
+function [rho_plus, rho_minus, xb_plus, xb_minus, w] = createAttackProj(t, rho_plus, rho_minus, epsilon, Psi_half, Sigma_proj_plus, Sigma_proj_minus, mu_proj_plus, mu_proj_minus, p_plus, p_minus, Q, enforce_pos)
   d_proj = size(Q,1);
   d = size(Q,2);
   disp('setting up variables...');
@@ -34,8 +34,8 @@ function [rho_plus, rho_minus, xb_plus, xb_minus] = createAttackProj(t, rho_plus
   disp('setting up optimization...');
   tic;
   Objective = max_err;
-  Constraint = [mu_transpose_w == -t; 
-                p_plus * xb_plus - p_minus * xb_minus == (1-epsilon) / epsilon * partial_L;
+  Constraint = [mu_transpose_w <= -t; 
+                p_plus * xb_plus - p_minus * xb_minus == (1 / epsilon) * partial_L;
                 residual_plus' * residual_plus <= max_err; 
                 residual_minus' * residual_minus <= max_err; 
                 rho_plus_squared_sym <= rho_plus^2; 
@@ -50,8 +50,17 @@ function [rho_plus, rho_minus, xb_plus, xb_minus] = createAttackProj(t, rho_plus
   end
   toc;
 
+  include_bilinear = 1;
+  if include_bilinear
+    disp('adding bilinear constraints...');
+    Constraint = [Constraint; w0' * xb_plus <= 1; 
+                              w0' * xb_minus >= -1];
+  end
+  
   disp('solving optimization...');
-  optimize(Constraint, Objective);
+  opts = sdpsettings;
+  opts.fmincon.MaxIter = 50;
+  optimize(Constraint, Objective, opts);
 
   disp('Extracting solution...');
   tic;
