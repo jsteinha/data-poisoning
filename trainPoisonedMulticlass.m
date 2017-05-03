@@ -1,3 +1,9 @@
+%%
+[lossClean, accClean, thetaClean] = trainMulticlass([X_train], [y_train], k, 0.005, 1e-4, N_train, d, 99999);
+%%
+[lossCleanTest, accCleanTest] = testMulticlass(X_test, y_test, k, N_test, d, thetaClean, 99999);
+%%
+
 %load('imdb.mat');
 %load('xb_attack.mat');
 N_pert = round(0.20 * N_train);
