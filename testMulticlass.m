@@ -6,12 +6,13 @@ function [loss, acc] = testMulticlass(X, y, k, N, d, theta, Nmax)
     for ii=1:min(N,Nmax)
         i = piTest(ii);
         %margin = y(i) * X(i,:) * theta;
-        plus = X(i,:) * theta(:, y(i));
+        scores = X(i,:) * theta;
+        plus = scores(y(i)); %X(i,:) * theta(:, y(i));
         minus = -99999;
         bestj = -1;
         for j=1:k
           if j ~= y(i)
-            curminus = X(i,:) * theta(:,j);
+            curminus = scores(j); %X(i,:) * theta(:,j);
             if bestj == -1 || curminus > minus
               bestj = j;
               minus = curminus;

@@ -7,12 +7,13 @@ function [loss, acc, theta] = trainMulticlass(X, y, k, eta, delta, N, d, Nmax)
     pi = randperm(N);
     for ii=1:min(N,Nmax)
         i = pi(ii);
-        plus = X(i,:) * theta(:, y(i));
+        scores = X(i,:) * theta;
+        plus = scores(y(i)); %X(i,:) * theta(:, y(i));
         minus = -99999;
         bestj = -1;
         for j=1:k
           if j ~= y(i)
-            curminus = X(i,:) * theta(:,j);
+            curminus = scores(j); %X(i,:) * theta(:,j);
             if bestj == -1 || curminus > minus
               bestj = j;
               minus = curminus;

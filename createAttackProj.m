@@ -9,7 +9,7 @@ function [rho_plus, rho_minus, xb_plus, xb_minus, w] = createAttackProj(t, rho_p
   b_minus = normcdf((1+t)/rho_minus);
 
   w0 = sdpvar(d_proj, 1);
-  if enforce_pos
+  if any(enforce_pos)
     xb_plus_pre = sdpvar(d, 1);
     xb_minus_pre = sdpvar(d, 1);
     xb_plus = Q * xb_plus_pre;
@@ -40,10 +40,13 @@ function [rho_plus, rho_minus, xb_plus, xb_minus, w] = createAttackProj(t, rho_p
                 residual_minus' * residual_minus <= max_err; 
                 rho_plus_squared_sym <= rho_plus^2; 
                 rho_minus_squared_sym <= rho_minus^2];
-  if enforce_pos
+  if any(enforce_pos)
+    if length(enforce_pos) == 1
+      enforce_pos = ones(d,1);
+    end
     Constraint = [Constraint; 
-                  xb_plus_pre >= 0;
-                  xb_minus_pre >= 0];
+                  xb_plus_pre(logical(enforce_pos)) >= 0;
+                  xb_minus_pre(logical(enforce_pos)) >= 0];
   end
   toc;
 
@@ -64,7 +67,7 @@ function [rho_plus, rho_minus, xb_plus, xb_minus, w] = createAttackProj(t, rho_p
   w = Q' * double(w0);
   rho_plus = sqrt(double(rho_plus_squared_sym));
   rho_minus = sqrt(double(rho_minus_squared_sym));
-  if enforce_pos
+  if any(enforce_pos)
     xb_plus = double(xb_plus_pre);
     xb_minus = double(xb_minus_pre);
   else
