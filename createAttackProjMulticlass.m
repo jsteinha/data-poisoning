@@ -1,4 +1,4 @@
-function [ts, rhos, xb_full, p_attack] = createAttackProj(k, epsilon, j_attack, j_target, ts, rhos, Psi_half, Sigma_projs, mu_projs, ps, Q)
+function [ts, rhos, xb_full, p_attack, w] = createAttackProjMulticlass(k, epsilon, j_attack, j_target, ts, rhos, Psi_half, Sigma_projs, mu_projs, ps, Q)
   d_proj = size(Q,1);
   d = size(Q,2);
   disp('setting up variables...');
@@ -33,15 +33,23 @@ function [ts, rhos, xb_full, p_attack] = createAttackProj(k, epsilon, j_attack, 
   disp('building partial_L and rho_squared_sym...');
   tic;
 
-  partial_L = cell(k);
+  partial_L = cell(k,1);
   rho_squared_sym = cell(k,k);
-  for j=1:k
-    partial_L{j} = zeros(d_proj,1);
+  lambda = sdpvar(d_proj,1); % Lagrange multiplier since \sum_j w_j = 0
+  parfor j=1:k
+    partial_L{j} = lambda;
     for j2=1:k
       if j ~= j2
 %dbstop if error
         partial_L{j} = partial_L{j} + ps(j) * (exp(-0.5*(1+ts(j,j2))^2/rhos(j,j2)^2) * Sigma_projs{j} * (w0{j} - w0{j2}) / rhos(j,j2) - normcdf((1+ts(j,j2))/rhos(j,j2)) * mu_projs(:,j));
         rho_squared_sym{j,j2} = (w0{j}-w0{j2})' * Sigma_projs{j} * (w0{j}-w0{j2});
+        %Constraint = [Constraint; rho_squared_sym{j,j2} <= rhos(j,j2)^2];
+      end
+    end
+  end
+  for j=1:k
+    for j2=1:k
+      if j ~= j2
         Constraint = [Constraint; rho_squared_sym{j,j2} <= rhos(j,j2)^2];
       end
     end
@@ -84,7 +92,7 @@ function [ts, rhos, xb_full, p_attack] = createAttackProj(k, epsilon, j_attack, 
 
   p_attack = (ps + (1:k==j_attack)' + (1:k==j_target)')/3.0;
   for j=1:k
-    Constraint = [Constraint; p_attack(j) * xb{j} == (1-epsilon) / epsilon * partial_L{j}];
+    Constraint = [Constraint; p_attack(j) * xb{j} == (1 / epsilon) * partial_L{j}];
   end
   %Constraint = [Constraint; xb_mean == (1-epsilon) / epsilon * partial_L];
 

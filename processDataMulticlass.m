@@ -1,11 +1,11 @@
-function processData(X_train, y_train, X_test, y_test, name, r, k)
+function processDataMulticlass(X_train, y_train, X_test, y_test, name, r, k)
   N_train = size(X_train, 1);
   N_test = size(X_test, 1);
   d = size(X_train, 2);
   assert(d == size(X_test, 2));
   assert(N_train == size(y_train,1));
   assert(N_test == size(y_test,1));
-  if k == 2
+  if false && k == 2
     assert(all(y_train == 1 | y_train == -1));
     assert(all(y_test == 1 | y_test == -1));
   else
