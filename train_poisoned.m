@@ -23,6 +23,6 @@ clear X_pert_init X_pert_cur X_pert_round X_pert_rem X_pert_rem_sparse;
 %% make sure data is actually poisoned
 %[lossPertRev, accPertRev] = test(X_pert, y_pert, N_pert, d, theta);
 %% train SVM
-[lossPert, accPert, thetaPert] = train([X_train;X_pert], [y_train;y_pert], 0.005, 1e-4, N_train+N_pert, d, 3000);
+[lossPert, accPert, thetaPert] = train([X_train;X_pert], [y_train;y_pert], 0.005, 1e-4, N_train+N_pert, d, 99999);
 [lossPertBad, accPertBad] = test(X_pert, y_pert, N_pert, d, thetaPert, 99999);
 [lossPertTest, accPertTest] = test(X_test, y_test, N_test, d, thetaPert, 99999);

@@ -6,16 +6,49 @@ function [G, Constraint, G_v, G_0, A, R_0, R_v, R, X_p, X_m] = sdpSmall(epsilon,
     Gx = sdpvar(2);
     Gs = sdpvar(2, sizeG-2, 'full');
     Mo = [mu_p'; mu_m'; M_p; M_m];
-    % inner product of known terms
     Go = Mo * Mo';
-    G = [Gx Gs; Gs' Go];
+    G = [Gx Gs; Gs' Go]; %sdpvar(sizeG);
     Gc = [Gx Gs(1:2,1:2); Gs(1:2,1:2)' Go(1:2,1:2)];
+    %Gc = G(1:4,1:4);
     u_p = 3;
     u_m = 4;
     c_p = @(i) i+4;
     c_m = @(i) i+nc_p+4;
     
+    % inner product of known terms
     Constraint = [G >= 0];
+%     Constraint = [Constraint;
+%                   G(u_p,u_p) == mu_p' * mu_p;
+%                   G(u_p,u_m) == mu_p' * mu_m;
+%                   G(u_m,u_p) == mu_m' * mu_p;
+%                   G(u_m,u_m) == mu_m' * mu_m];
+%     for i=1:nc_p
+%         Constraint = [Constraint;
+%                       G(u_p, c_p(i)) == M_p(i,:) * mu_p;
+%                       G(u_m, c_p(i)) == M_p(i,:) * mu_m];
+%         for j=1:nc_p
+%             Constraint = [Constraint;
+%                           G(c_p(j), c_p(i)) == M_p(j,:) * M_p(i,:)'];
+%         end
+%         for j=1:nc_m
+%             Constraint = [Constraint;
+%                           G(c_m(j), c_p(i)) == M_m(j,:) * M_p(i,:)'];
+%         end
+%     end
+%     for i=1:nc_m
+%         Constraint = [Constraint;
+%                       G(u_p, c_m(i)) == M_m(i,:) * mu_p;
+%                       G(u_m, c_m(i)) == M_m(i,:) * mu_m];
+%         for j=1:nc_p
+%             Constraint = [Constraint;
+%                           G(c_p(j), c_m(i)) == M_p(j,:) * M_m(i,:)'];
+%         end
+%         for j=1:nc_m
+%             Constraint = [Constraint;
+%                           G(c_m(j), c_m(i)) == M_m(j,:) * M_m(i,:)'];
+%         end
+%     end
+
     
     % M_p * x_p <= y_p
     % M_m * x_m <= y_m
@@ -45,9 +78,9 @@ function [G, Constraint, G_v, G_0, A, R_0, R_v, R, X_p, X_m] = sdpSmall(epsilon,
                   [0 1 0 -1] * Gc * mean_vec <= s_m; 
                   [0 1 0 -1] * Gc * mean_vec >= -s_m]; 
               
-    Objective = [p_p -p_m 0 0]*Gc*[0; 0; 1; -1];
+    Objective = [p_p -p_m 0 0]*Gc*[0; 0; 1; -1] + 0.00 * ([1 0 -1 0] * Gc * [1; 0; -1; 0] + [0 1 0 -1] * Gc * [0; 1; 0; -1]);
     
-    optimize(Constraint, Objective, opts);
+    optimize(Constraint, [], opts);
     fprintf(1, 'Objective: %.4f\n', double(Objective));
     G_v = double(G);
     
