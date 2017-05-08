@@ -1,4 +1,4 @@
-function [loss, acc, theta] = trainMulticlass(X, y, k, eta, delta, N, d, Nmax)
+function [loss, acc, theta] = trainMulticlass(X, y, k, eta, delta, N, d, Nmax, verbose)
     theta = zeros(d,k);
     theta2 = delta * ones(d,k);
     totalLoss = zeros(k,1);
@@ -31,7 +31,7 @@ function [loss, acc, theta] = trainMulticlass(X, y, k, eta, delta, N, d, Nmax)
             theta2(:,bestj) = theta2(:,bestj) + gradient .* gradient;
             theta(:,bestj) = theta(:,bestj) - eta * gradient ./ sqrt(theta2(:,bestj));
         end
-        if mod(ii,100) == 0
+        if verbose && mod(ii,100) == 0
             fprintf(1, 'avg loss (iter %d): %.4f (%.4f)\n', ii, sum(totalLoss) / ii, sum(totalAcc) / ii);
         end
     end

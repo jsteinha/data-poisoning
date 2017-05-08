@@ -1,4 +1,4 @@
-function [loss, acc] = testMulticlass(X, y, k, N, d, theta, Nmax)
+function [loss, acc] = testMulticlass(X, y, k, N, d, theta, Nmax, verbose)
     totalLossTest = zeros(k,1);
     totalAccTest = zeros(k,1);
     counts = zeros(k,1);
@@ -23,7 +23,7 @@ function [loss, acc] = testMulticlass(X, y, k, N, d, theta, Nmax)
         totalLossTest(y(i)) = totalLossTest(y(i)) + max(1-margin, 0); %0.5 * max(1-margin,0)^2;
         totalAccTest(y(i)) = totalAccTest(y(i)) + (margin > 0);
         counts(y(i)) = counts(y(i)) + 1;
-        if mod(ii,100) == 0
+        if verbose && mod(ii,100) == 0
             fprintf(1, 'avg loss (iter %d): %.4f (%.4f)\n', ii, sum(totalLossTest) / ii, sum(totalAccTest) / ii);
         end
     end

@@ -6,7 +6,7 @@ function [thetaPert, accGood, accBad, X_pert, y_pert] = trainPoisonedFnc(xb_plus
     X_pert = sparse(N_pert,d);
     B = 100;
     for i=1:B:N_pert
-        i
+        %i
         i2 = min(i+B-1,N_pert);
         B2 = i2-i+1;
         %A_pert_cur = max(0, ones(B2,1) * mu_all' + y_pert(i:i2) * xb');
@@ -27,9 +27,9 @@ function [thetaPert, accGood, accBad, X_pert, y_pert] = trainPoisonedFnc(xb_plus
         X_pert = full(X_pert);
     end
     % train SVM
-    [lossPert, accPert, thetaPert] = trainMulticlass([X_train;X_pert], ([y_train;y_pert]+3)/2, 2, 0.005, 1e-4, N_train+N_pert, d, 10000);
-    [lossPertBad, accPertBad] = testMulticlass(X_pert, (y_pert+3)/2, 2, N_pert, d, thetaPert, 2000);
-    [lossPertTrain, accPertTrain] = testMulticlass(X_train, (y_train+3)/2, 2, N_train, d, thetaPert, 2000);
+    [lossPert, accPert, thetaPert] = trainMulticlass([X_train;X_pert], ([y_train;y_pert]+3)/2, 2, 0.005, 1e-4, N_train+N_pert, d, 10000, 0);
+    [lossPertBad, accPertBad] = testMulticlass(X_pert, (y_pert+3)/2, 2, N_pert, d, thetaPert, 2000, 0);
+    [lossPertTrain, accPertTrain] = testMulticlass(X_train, (y_train+3)/2, 2, N_train, d, thetaPert, 2000, 0);
     thetaPert = thetaPert(:,2) - thetaPert(:,1);
     accGood = accPertTrain;
     accBad = accPertBad;

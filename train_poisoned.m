@@ -4,6 +4,7 @@ N_pert = round(epsilon * N_train);
 y_pert = 2*(rand(N_pert,1)<p_plus)-1;
 X_pert = sparse(N_pert,d);
 B = 50;
+enforce_pos = 0;
 for i=1:B:N_pert
     i
     i2 = min(i+B-1,N_pert);
@@ -11,13 +12,19 @@ for i=1:B:N_pert
     %A_pert_cur = max(0, ones(B2,1) * mu_all' + y_pert(i:i2) * xb');
     X_pert_init = (y_pert(i:i2)==1) * xb_plus' + (y_pert(i:i2)==-1) * xb_minus';
     %X_pert_init = diag(y_pert(i:i2)==1) * X_plus(:,i:i2)' + diag(y_pert(i:i2)==-1) * X_minus(:,i:i2)';
-    %X_pert(i:i2,:) = X_pert_init;
-    X_pert_cur = max(0, X_pert_init);
-    X_pert_round = round(X_pert_cur);
-    X_pert_rem = X_pert_cur - X_pert_round;
-    multiplier = 1;
-    X_pert_rem_sparse = multiplier * sign(X_pert_rem) .* (rand(B2,d) < (1/multiplier) * abs(X_pert_rem));
-    X_pert(i:i2,:) = X_pert_round + X_pert_rem_sparse;
+    if ~enforce_pos
+        X_pert(i:i2,:) = X_pert_init;
+    else
+        X_pert_cur = max(0, X_pert_init);
+        X_pert_round = round(X_pert_cur);
+        X_pert_rem = X_pert_cur - X_pert_round;
+        multiplier = 1;
+        X_pert_rem_sparse = multiplier * sign(X_pert_rem) .* (rand(B2,d) < (1/multiplier) * abs(X_pert_rem));
+        X_pert(i:i2,:) = X_pert_round + X_pert_rem_sparse;
+    end
+end
+if nnz(X_pert) > 0.5 * numel(X_pert)
+    X_pert = full(X_pert);
 end
 clear X_pert_init X_pert_cur X_pert_round X_pert_rem X_pert_rem_sparse;
 %% make sure data is actually poisoned
