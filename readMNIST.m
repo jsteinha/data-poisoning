@@ -1,4 +1,4 @@
-function [X_train, y_train, X_test, y_test] = generate_mnist(num_classes)
+function [X_train, y_train, X_test, y_test] = readMNIST(num_classes)
     X_train = loadMNISTImages('mnist/train-images-idx3-ubyte');
     y_train = loadMNISTLabels('mnist/train-labels-idx1-ubyte');
     X_train = X_train(:, y_train < num_classes)';

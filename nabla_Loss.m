@@ -1,4 +1,4 @@
-function [gradient, loss] = nabla_Loss(X, y, theta)
+function [gradient, loss] = nabla_Loss(X, y, theta, verbose)
     N = size(X, 1);
     d = size(X, 2);
     gradient = zeros(d,1);
@@ -9,7 +9,7 @@ function [gradient, loss] = nabla_Loss(X, y, theta)
         if margin < 1
             gradient = gradient + y(i) * X(i,:)';
         end
-        if mod(i,1000) == 0
+        if verbose && mod(i,1000) == 0
             fprintf(1, '%d/%d examples...\n', i, N);
         end
     end

@@ -3,7 +3,11 @@ function [thetaPert, accGood, accBad, X_pert, y_pert] = trainPoisonedFnc(xb_plus
     d = size(X_train, 2);
     N_pert = round(epsilon * N_train);
     y_pert = 2*(rand(N_pert,1)<p_plus)-1;
-    X_pert = sparse(N_pert,d);
+    if ~enforce_pos
+        X_pert = zeros(N_pert, d);
+    else
+        X_pert = sparse(N_pert,d);
+    end
     B = 100;
     for i=1:B:N_pert
         %i
