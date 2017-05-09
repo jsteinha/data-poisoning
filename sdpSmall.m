@@ -37,14 +37,15 @@ function [G, Constraint, G_v, A, X_p, X_m, W] = sdpSmall(epsilon, mu, probs, r_s
 %                           G(h(i), i_cons(i)) ...
 %                           - epsilon * probs(1) * G(i_w, i_x(1)) / c(i) ...
 %                           + epsilon * probs(2) * G(i_w, i_x(2)) / c(i) <= y(i) / c(i)];
-            expr = c(i) * G(i_w, i_cons(i));
-            expr = expr + c(i+1) * epsilon * probs(1) * G(i_x(1), i_cons(i+1));
-            expr = expr - c(i+1) * epsilon * probs(2) * G(i_x(2), i_cons(i+1));
-            expr = expr - epsilon * probs(1) * G(i_w, i_x(1));
-            expr = expr + epsilon * probs(2) * G(i_w, i_x(2));
+            lossBound = c(i) * G(i_w, i_cons(i));
+            lossBound = lossBound - epsilon * probs(1) * G(i_w, i_x(1));
+            lossBound = lossBound + epsilon * probs(2) * G(i_w, i_x(2));
+            slack = -c(i+1) * epsilon * probs(1) * G(i_x(1), i_cons(i+1));
+            slack = slack + c(i+1) * epsilon * probs(2) * G(i_x(2), i_cons(i+1));
             Objective = max(Objective, -c(i) * G(i_w, i_cons(i)) + y(i+1));
+            Constraint = [Constraint; lossBound - y(i+1) <= 1];
             Constraint = [Constraint;
-                          expr <= y(i)];
+                          lossBound - slack <= y(i)];
             i = i+2;
         else
             precond = 1; %max(c(i), y(i));
@@ -83,22 +84,30 @@ function [G, Constraint, G_v, A, X_p, X_m, W] = sdpSmall(epsilon, mu, probs, r_s
     X_m = zeros(d, num_x);
     W = zeros(d, num_x);
     dbstop if error;
-    [Proj_half, ~] = qr([mu M'], 0);
+%    [Proj_half, ~] = qr([mu M'], 0);
+    [Proj_half, ~] = eig_lr(Mo' * Mo, 1e-6);
     G_v = psd_proj(G_v);
     G_11 = G_v(1:3,1:3);
     G_12 = G_v(1:3,4:end);
-    G_22 = psd_proj(G_v(4:end,4:end));
-    G_22_pinv = pinv(G_22);
-    [U_22, D_22] = eig_lr(G_22, 1e-5);
-    G_22_sqrt = U_22 * sqrt(D_22);
-    G_22_pinv_sqrt = U_22 * sqrt(inv(D_22));
-    G_schur_sqrt = G_12 * G_22_pinv_sqrt;
-    B = G_schur_sqrt * G_22_pinv_sqrt';
-    AAt = (G_11 - (G_schur_sqrt * G_schur_sqrt'));
+    G_22 = G_v(4:end,4:end);
+%    G_22_pinv = pinv(G_22);
+    [U_22, D_22] = eig_lr(G_22, 1e-6);
+    Gp_11 = G_11;
+    Gp_12 = G_12 * U_22;
+    Gp_22 = D_22; %U_22' * G_22 * U_22;
+%    G_22_sqrt = U_22 * sqrt(D_22);
+    Gp_22_pinv_sqrt = sqrt(inv(D_22)); %U_22 * sqrt(inv(D_22));
+    Gp_schur_sqrt = Gp_12 * Gp_22_pinv_sqrt;
+    Bp = Gp_schur_sqrt * Gp_22_pinv_sqrt';
+    AAt = (G_11 - (Gp_schur_sqrt * Gp_schur_sqrt'));
     [U_a, D_a] = eig(AAt);
     A = U_a * sqrt(max(D_a,0));
-    R = [A B; zeros(sizeG-3, 3) eye(sizeG-3)];
-
+    sizep = size(Bp,1);
+    R = [A Bp * U_22'; zeros(sizeG-3, 3) eye(sizeG-3)];
+    blk_proj = [eye(3) zeros(3,sizeG-3); zeros(sizeG-3,3) U_22 * U_22'];
+    G_vp = blk_proj' * G_v * blk_proj;
+%    assert(false);
+    
     for i=1:num_x
         basis = randn(d,3);
         basis = basis - Proj_half * (Proj_half' * basis);
@@ -120,15 +129,15 @@ function [G, Constraint, G_v, A, X_p, X_m, W] = sdpSmall(epsilon, mu, probs, r_s
 %        G_0 = G_0(sizeG:-1:1,sizeG:-1:1);
 %        G_v = G_v(sizeG:-1:1,sizeG:-1:1);
         
-        T = T_0 * R';
+        T = [x0_p x0_m w0] * A' + [mu (diag(c) \ M)'] * U_22 * Bp';
         
         %G_v
         
         %(T' * T)
-                
-        err = max(max(abs(G_v - (T'*T))));
+        T_full = [T mu (diag(c) \ M)'];
+        err = norm(G_vp - (T_full'*T_full), 'inf');
         %err
-        assert(err < 1e-1);
+        assert(err < 1e-0);
         assert(isreal(T));
         
         X_p(:,i) = T(:,1);
@@ -139,7 +148,7 @@ end
 
 function [U,D] = eig_lr(A, tol)
     [U,D] = eig((A+A')/2);
-    active = diag(D)>tol;
+    active = diag(D)>tol*max(D(:));
     U = U(:, active);
     D = D(active,active);
 end

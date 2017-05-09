@@ -3,7 +3,11 @@ clear;
 %load process_data_results_imdb_r50.mat;
 %load process_data_results_dogfish_r300.mat
 load process_data_results_mnist_r50.mat;
-opts = sdpsettings('verbose', 0, 'showprogress', 0, 'solver', 'sedumi');
+opts = sdpsettings('verbose', 2, 'showprogress', 1, 'solver', 'sedumi');
+%X_train = X_proj';
+%mu_plus = mu_proj_plus;
+%mu_minus = mu_proj_minus;
+%d = size(X_train, 2);
 %%
 % enron
 % [r_p,r_m] = deal(3,7);
@@ -21,7 +25,7 @@ r_slab = [3.5 12];
 
 probs = [p_plus p_minus];
 %%
-epsilon = 1.00;
+epsilon = 2.00;
 MAX_SLACK = inf; %1.0;
 M_theta = [];
 y_theta = []; 
@@ -36,13 +40,23 @@ thetas = [];
 losses2 = [];
 gradients2 = [];
 w_noms = [];
+xbps = [];
+xbms = [];
 nmlz = @(x) x/norm(x,2);
 %
+
+% M_theta = [M_theta; gnom'; zeros(1,d)'];
+% y_theta = [y_theta; (L0 - Lnom) + gnom' * w_nom; gnom' * w_nom - Lnom];
+% h_theta = [h_theta; 3; -1];
+% c_theta = [c_theta; norm(gnom, 2); norm(thetaPert, 2)];
+
 for major_iter = 1:100
     M_nn = [];
     y_nn = [];
     h_nn = [];
     c_nn = [];
+
+    
     
     MAX_ITER = 100;
     slacks = zeros(MAX_ITER, 2);
@@ -108,6 +122,8 @@ for major_iter = 1:100
     end
     accGoods = [accGoods accGood];
     accBads = [accBads accBad];
+    xbps = [xbps; xb_plus'];
+    xbms = [xbms; xb_minus'];
     accGoods
     accBads
 %    if accGood < 0.55
