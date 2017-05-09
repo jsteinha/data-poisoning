@@ -28,7 +28,7 @@ function [G, Constraint, G_v, A, X_p, X_m, W] = sdpSmall(epsilon, mu, probs, r_s
     % M_m * x_m <= y_m
     % M_w * w <= y_w
     i=1;
-    Objective = -100; %[probs(1) -probs(2) 0 0 0]*Gc*[0; 0; 0; 1; -1];
+    Objective = -100;
     
     while i <= nc
         assert(h(i) > 0);
@@ -42,8 +42,8 @@ function [G, Constraint, G_v, A, X_p, X_m, W] = sdpSmall(epsilon, mu, probs, r_s
             lossBound = lossBound + epsilon * probs(2) * G(i_w, i_x(2));
             slack = -c(i+1) * epsilon * probs(1) * G(i_x(1), i_cons(i+1));
             slack = slack + c(i+1) * epsilon * probs(2) * G(i_x(2), i_cons(i+1));
-            Objective = max(Objective, -c(i) * G(i_w, i_cons(i)) + y(i+1));
-            Constraint = [Constraint; lossBound - y(i+1) <= 1];
+            %Objective = max(Objective, -c(i) * G(i_w, i_cons(i)) + y(i+1));
+            %Constraint = [Constraint; lossBound - y(i+1) <= 1];
             Constraint = [Constraint;
                           lossBound - slack <= y(i)];
             i = i+2;
@@ -53,6 +53,10 @@ function [G, Constraint, G_v, A, X_p, X_m, W] = sdpSmall(epsilon, mu, probs, r_s
                           (c(i) / precond) * G(h(i), i_cons(i)) <= (y(i) / precond)];
             i = i+1;
         end
+    end
+    
+    if true || sum(h==3) == 0
+        Objective = [probs(1) -probs(2) 0 0 0]*Gc*[0; 0; 0; 1; -1];
     end
     
     % constrain \ell_2 norm to class center
@@ -85,7 +89,7 @@ function [G, Constraint, G_v, A, X_p, X_m, W] = sdpSmall(epsilon, mu, probs, r_s
     W = zeros(d, num_x);
     dbstop if error;
 %    [Proj_half, ~] = qr([mu M'], 0);
-    [Proj_half, ~] = eig_lr(Mo' * Mo, 1e-6);
+    [Proj_half, ~] = svd_lr(Mo', 1e-6);
     G_v = psd_proj(G_v);
     G_11 = G_v(1:3,1:3);
     G_12 = G_v(1:3,4:end);
@@ -144,6 +148,13 @@ function [G, Constraint, G_v, A, X_p, X_m, W] = sdpSmall(epsilon, mu, probs, r_s
         X_m(:,i) = T(:,2);
         W(:,i) = T(:,3);
     end
+end
+
+function [U,D] = svd_lr(A, tol)
+    [U,D,~] = svd(A, 'econ');
+    active = diag(D) > tol*max(D(:));
+    U = U(:,active);
+    D = D(active,active);
 end
 
 function [U,D] = eig_lr(A, tol)
