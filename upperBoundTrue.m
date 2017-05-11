@@ -1,4 +1,6 @@
 function upperBoundTrue(X_train, y_train, theta, probs, mus, epsilon, r_slab, r_sphere)
+    % we don't have a good way of splitting u pthe probabilities, so let's
+    % just do it randomly
     probs_eps = gamrnd([probs(1) probs(1) probs(2) probs(2)], 1);
     probs_eps = epsilon * probs_eps / sum(probs_eps);
     % who are the players?
