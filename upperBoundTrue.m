@@ -1,6 +1,7 @@
-function upperBoundTrue(X_train, y_train, theta, probs, mus, epsilon, r_slab, r_sphere)
-    probs_eps = gamrnd([probs(1) probs(1) probs(2) probs(2)], 1);
-    probs_eps = epsilon * probs_eps / sum(probs_eps);
+function [G, Constraint] = upperBoundTrue(X_train, y_train, theta, probs, mus, epsilon, r_slab, r_sphere)
+    %probs_eps = gamrnd([probs(1) probs(1) probs(2) probs(2)], 1);
+    %probs_eps = epsilon * probs_eps / sum(probs_eps);
+    probs_eps = epsilon * [probs(1) 0 probs(2) 0];
     % who are the players?
     % x_a^+, x_b^+, x_a^-, x_b^-
     % mu^+, mu^-, theta
@@ -30,8 +31,8 @@ function upperBoundTrue(X_train, y_train, theta, probs, mus, epsilon, r_slab, r_
     Constraint = [Constraint;
                   (e_ap - mu_pp)' * G * (e_ap - mu_pp) <= r_sphere(1)^2;
                   (e_bp - mu_pp)' * G * (e_bp - mu_pp) <= r_sphere(1)^2;
-                  (e_am - mu_mp)' * G * (e_ap - mu_mp) <= r_sphere(1)^2;
-                  (e_bm - mu_mp)' * G * (e_bp - mu_mp) <= r_sphere(1)^2];
+                  (e_am - mu_mp)' * G * (e_am - mu_mp) <= r_sphere(2)^2;
+                  (e_bm - mu_mp)' * G * (e_bm - mu_mp) <= r_sphere(2)^2];
     
     % add slab constraints
     Constraint = [Constraint;
@@ -43,7 +44,7 @@ function upperBoundTrue(X_train, y_train, theta, probs, mus, epsilon, r_slab, r_
               
     Objective = probs_eps(1) * (1 - e_ap' * G * e_th) + probs_eps(3) * (1 + e_am' * G * e_th);
     
-    opts = sdpsettings('verbose', 2, 'showprogress', 1, 'solver', 'gurobi');
+    opts = sdpsettings('verbose', 2, 'showprogress', 1, 'solver', 'sedumi');
     optimize(Constraint, -Objective, opts);
     val = double(Objective);
     fprintf(1, 'value = %.4f \t (eps = [%.3f %.3f %.3f %.3f])\n', val, probs_eps(1), probs_eps(2), probs_eps(3), probs_eps(4));
