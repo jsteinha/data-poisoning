@@ -1,5 +1,5 @@
 clear all;
-name = 'enron';
+name = 'dogfish';
 load(sprintf('%s/%s_data.mat', name, name));
 epsilon = 0.1;
 %opts = sdpsettings('verbose', 2, 'showprogress', 1, 'solver', 'gurobi', 'gurobi.TimeLimit', 3);
@@ -9,7 +9,7 @@ eta = 0.05;
 delta = 1.0;
 theta = zeros(d,1);
 theta2 = zeros(d,1);
-MAX_ITER = 3310;
+MAX_ITER = 1000; %3310;
 X_pert = zeros(MAX_ITER, d);
 y_pert = zeros(MAX_ITER, 1);
 %
