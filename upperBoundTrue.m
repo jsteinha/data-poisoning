@@ -52,7 +52,7 @@ function [G, Constraint, val, X_eps, probs_eps] = upperBoundTrue(X_train, y_trai
               
     Objective = probs_eps(1) * (1 - e_ap' * G * e_th) + probs_eps(3) * (1 + e_am' * G * e_th); % loss on the support vectors x_a^+ and x_a^-
     
-    opts = sdpsettings('verbose', 0, 'showprogress', 0, 'solver', 'sedumi');
+    opts = sdpsettings('verbose', 0, 'showprogress', 0, 'solver', 'sedumi', 'cachesolvers', 1);
     optimize(Constraint, -Objective, opts);
     val = double(Objective);
     fprintf(1, 'value = %.4f \t (eps = [%.3f %.3f %.3f %.3f])\n', val, probs_eps(1), probs_eps(2), probs_eps(3), probs_eps(4));

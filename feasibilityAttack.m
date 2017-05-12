@@ -1,23 +1,24 @@
 name = 'enron';
 load(sprintf('%s/%s_data.mat', name, name));
-epsilon = 0.3;
+epsilon = input('enter value of epsilon (default 0.1): ');
 %opts = sdpsettings('verbose', 2, 'showprogress', 1, 'solver', 'gurobi', 'gurobi.TimeLimit', 3);
 [N_train, N_test, d, mus, probs, r_sphere, r_slab, r_ones] = processDataLight(X_train, y_train, X_test, y_test);
 %epsilon_tape = [0.06 0.08 0.10 0.12 0.15 0.20 0.30 0.50 0.60 0.80];
-eta = input('enter value of eta (default 0.05): '); %0.05;
-delta = input('enter value of delta (default 1.0): '); %1.0;
+eta = input('enter value of eta (default 0.10): '); %0.05;
+lambda = input('enter value of lambda: ');
+z = zeros(d,1);
 theta = zeros(d,1);
-theta2 = zeros(d,1);
-MAX_ITER = 1000;
+MAX_ITER = round(eta * N_train);
 X_pert = zeros(MAX_ITER, d);
 y_pert = zeros(MAX_ITER, 1);
 %
 % initial step
 [g_c, L_c] = nabla_Loss(X_train, y_train, theta);
-theta2 = theta2 + g_c .* g_c;
-theta = theta - eta * g_c ./ (delta + sqrt(theta2));
+z = z - g_c;
+theta = theta - eta * g_c;
 % main loop
 opts = sdpsettings('verbose', 0, 'showprogress', 0, 'solver', 'gurobi', 'gurobi.TimeLimit', 3);
+Rcum = 0.5 * eta * norm(g_c,2)^2;
 for iter = 1:MAX_ITER
     fprintf(1, '====== STARTING ITERATION %d ======\n', iter);
     vals = zeros(1,2);
@@ -62,7 +63,9 @@ for iter = 1:MAX_ITER
     X_pert(iter,:) = xr;
     fprintf(1, 'loss: %.4f (clean) | %.4f (poisoned) | %.4f (all)\n', L_c, L_p, L_c + epsilon * L_p);
     g = g_c + epsilon * g_p + 0.1 * theta;
-    eta_t = eta; % / sqrt(1 + 0.1 * iter);
-    theta2 = theta2 + g .* g;
-    theta = theta - eta_t * g ./ (delta + sqrt(theta2));
+    z = z - g;
+    theta = z / (1/eta + iter * lambda);
+    Rcum = Rcum + 0.5 * norm(g,2)^2 / (1/eta + iter * lambda);
+    fprintf(1, '\nAVERAGE REGRET after %d iterations: %.4f + %.4f |theta|_2^2\n\n', iter, Rcum / iter, 0.5 / (eta * iter));
+
 end
