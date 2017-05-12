@@ -1,4 +1,4 @@
-function [loss, acc, theta] = train(X, y, eta, delta, N, d, Nmax, numIters, lambda)
+function [loss, acc, theta] = train(X, y, eta, delta, N, d, Nmax, numIters, lambda, verbose)
     theta = zeros(d,1);
     theta2 = delta * ones(d,1);
     for iter=1:numIters
@@ -16,7 +16,7 @@ function [loss, acc, theta] = train(X, y, eta, delta, N, d, Nmax, numIters, lamb
             end
             theta2 = theta2 + gradient .* gradient;
             theta = theta + eta * gradient ./ sqrt(theta2);
-            if mod(ii,100) == 0
+            if verbose && mod(ii,100) == 0
                 fprintf(1, 'avg loss (iter %d): %.4f (%.4f)\n', ii, totalLoss / ii + 0.5 * lambda * norm(theta, 2)^2, totalAcc / ii);
             end
         end

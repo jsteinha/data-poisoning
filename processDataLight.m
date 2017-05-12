@@ -1,4 +1,4 @@
-function [N_train, N_test, d, mus, probs, r_sphere, r_slab, r_ones] = processDataLight(X_train, y_train, X_test, y_test)
+function [N_train, N_test, d, mus, probs, r_sphere, r_slab, r_ones] = processDataLight(X_train, y_train, X_test, y_test, qq)
   N_train = size(X_train, 1);
   N_test = size(X_test, 1);
   d = size(X_train, 2);
@@ -17,10 +17,10 @@ function [N_train, N_test, d, mus, probs, r_sphere, r_slab, r_ones] = processDat
   probs = [p_plus p_minus];
 
   tau_mean = computeTau(X_train, y_train, @(x,y) norm(x - mus(:, (3-y)/2), 2), 0);
-  r_sphere = [median(tau_mean(:,1)) median(tau_mean(:,2))];
+  r_sphere = [quantile(tau_mean(:,1), qq) quantile(tau_mean(:,2), qq)];
   tau_slab = computeTau(X_train, y_train, @(x,y) abs(dot(x-mus(:, (3-y)/2), mus(:,1) - mus(:,2))), 0);
-  r_slab = [median(tau_slab(:,1)) median(tau_slab(:,2))];
+  r_slab = [quantile(tau_slab(:,1), qq) quantile(tau_slab(:,2), qq)];
   tau_ones = computeTau(X_train, y_train, @(x,y) abs(dot(x-mus(:, (3-y)/2), ones(d,1))), 0);
-  r_ones = [median(tau_ones(:,1)) median(tau_ones(:,2))];
+  r_ones = [quantile(tau_ones(:,1), qq) quantile(tau_ones(:,2), qq)];
 
 end
