@@ -74,7 +74,7 @@ function [bestLower, bestUpper, lower_bounds, upper_bounds] = slabAttack(name, e
             end
         end
         if mod(iter, 50) == 0
-            S = 100;
+            S = 200;
             fprintf(1, 'Generating true upper bound (%d trials)...\n', S);
             maxVal = -inf;
             for s=1:S
@@ -93,7 +93,7 @@ function [bestLower, bestUpper, lower_bounds, upper_bounds] = slabAttack(name, e
     for k=1:NUM_K
         X_pert = squeeze(bestX(k,:,:));
         y_pert = bestY(k,:)';
-        save(sprintf('%s/attacks/%s_attack_eps_%02d_slab%d', name, name, round(100*epsilon), k), 'X_train', 'X_pert', 'X_test', 'y_train', 'y_pert', 'y_test');
+        save(sprintf('%s/attacks/%s_attack_eps%02d_slab%d', name, name, round(100*epsilon), k), 'X_train', 'X_pert', 'X_test', 'y_train', 'y_pert', 'y_test');
     end
     
 end
