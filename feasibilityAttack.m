@@ -13,7 +13,7 @@ function feasibilityAttack(name, epsilon, eta, lambda, quantile)
     %lambda = input('enter value of lambda: ');
     z = zeros(d,1);
     theta = zeros(d,1);
-    MAX_ITER = 5; %round(eta * N_train);
+    MAX_ITER = round(eta * N_train);
     X_pert = zeros(MAX_ITER, d);
     y_pert = zeros(MAX_ITER, 1);
     %
