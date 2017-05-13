@@ -1,5 +1,5 @@
 % G, Constraint are yalmip data for debugging
-function [G, Constraint, val, X_eps, probs_eps] = upperBoundTrue(X_train, y_train, theta, probs, mus, epsilon, r_slab, r_sphere, randomize)
+function [G, Constraint, val, X_eps, probs_eps] = upperBoundTrue(X_train, y_train, theta, bias, probs, mus, epsilon, r_slab, r_sphere, randomize, solver)
     % we don't have a good way of splitting u pthe probabilities, so let's
     % just do it randomly
     if randomize
@@ -30,10 +30,10 @@ function [G, Constraint, val, X_eps, probs_eps] = upperBoundTrue(X_train, y_trai
     
     % add inner product constraint
     Constraint = [Constraint;
-                  1 - e_ap' * G * e_th >= 0; % i.e., 1 - <x_a^+, theta> >= 0
-                  1 - e_bp' * G * e_th <= 0;
-                  1 + e_am' * G * e_th >= 0;
-                  1 + e_bm' * G * e_th <= 0];
+                  1 - (e_ap' * G * e_th + bias) >= 0; % i.e., 1 - <x_a^+, theta> >= 0
+                  1 - (e_bp' * G * e_th + bias) <= 0;
+                  1 + (e_am' * G * e_th + bias) >= 0;
+                  1 + (e_bm' * G * e_th + bias) <= 0];
     
     % add sphere constraints
     Constraint = [Constraint;
@@ -50,14 +50,14 @@ function [G, Constraint, val, X_eps, probs_eps] = upperBoundTrue(X_train, y_trai
                   -r_slab(2) <= (e_bm - mu_mp)' * G * (mu_pp - mu_mp) <= r_slab(2)];
 
               
-    Objective = probs_eps(1) * (1 - e_ap' * G * e_th) + probs_eps(3) * (1 + e_am' * G * e_th); % loss on the support vectors x_a^+ and x_a^-
+    Objective = probs_eps(1) * (1 - (e_ap' * G * e_th + bias)) + probs_eps(3) * (1 + (e_am' * G * e_th + bias)); % loss on the support vectors x_a^+ and x_a^-
     
-    opts = sdpsettings('verbose', 0, 'showprogress', 0, 'solver', 'sedumi', 'cachesolvers', 1);
+    opts = sdpsettings('verbose', 0, 'showprogress', 0, 'solver', solver, 'cachesolvers', 1);
     optimize(Constraint, -Objective, opts);
     val = double(Objective);
     fprintf(1, 'value = %.4f \t (eps = [%.3f %.3f %.3f %.3f])\n', val, probs_eps(1), probs_eps(2), probs_eps(3), probs_eps(4));
-    [~, L0] = nabla_Loss(X_train, y_train, theta);
-    fprintf(1, 'upper bound: %.4f (all) | %.4f (L0) | %.4f (val)\n', L0 + val, L0, val);
+    %[~, L0] = nabla_Loss(X_train, y_train, theta);
+    %fprintf(1, 'upper bound: %.4f (all) | %.4f (L0) | %.4f (val)\n', L0 + val, L0, val);
     
     if nargout > 3
         X_eps = extractVecs(double(G), G_m, [mus theta]);

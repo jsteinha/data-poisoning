@@ -108,7 +108,7 @@ function feasibilityAttack(name, epsilon, eta, lambda, quantile, solver)
         g = g_c + epsilon * g_p;
         dbias = dbias_c + epsilon * dbias_p;
         z = z - g;
-        z_bias = z_bias - eta * dbias;
+        z_bias = z_bias - dbias;
         theta = z / (1/eta + iter * lambda);
         bias = z_bias / (1/eta + iter * lambda);
         
