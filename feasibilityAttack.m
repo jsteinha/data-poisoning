@@ -22,7 +22,7 @@ function feasibilityAttack(name, epsilon, eta, lambda, quantile)
     z = z - g_c;
     theta = theta - eta * g_c;
     % main loop
-    opts = sdpsettings('verbose', 0, 'showprogress', 0, 'solver', 'gurobi', 'cachesolvers', 1);
+    opts = sdpsettings('verbose', 0, 'showprogress', 0, 'solver', 'sedumi', 'cachesolvers', 1);
     Rcum = 0.5 * eta * norm(g_c,2)^2;
     for iter = 1:MAX_ITER
         fprintf(1, '====== STARTING ITERATION %d ======\n', iter);
