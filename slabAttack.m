@@ -13,10 +13,10 @@ function [bestLower, bestUpper, lower_bounds, upper_bounds] = slabAttack(name, e
     z_bias = 0;
     theta = zeros(d,1);
     bias = 0;
-    % currently run for same number of iterations as the number of poisoned
+    % currently run for twice the number of iterations as the number of poisoned
     % points, but for this attack that's kind of an arbitrary choice (since
     % each iteration yields an attack set)
-    MAX_ITER = round(epsilon * N_train);
+    MAX_ITER = round(2 * epsilon * N_train);
     metadata = {};
     numUpper = 0;
     upper_bounds = [];
@@ -135,9 +135,11 @@ function [bestLower, bestUpper, lower_bounds, upper_bounds] = slabAttack(name, e
     fprintf(1, 'best lower bound: %.4f\n', bestLower);
     fprintf(1, 'best upper bound: %.4f\n', bestUpper);
    
+    Ravg = Rcum / MAX_ITER;
+    Ravg_norm = 0.5 / (eta * MAX_ITER);
     metadata_final = metadata{numUpper,1};
     save(sprintf('%s/attacks/%s_attack_eps%02d_slab', name, name, round(100*epsilon)), 'X_train', 'X_test', 'y_train', 'y_test', ...
-        'theta', 'bias', 'Rcum', ...
+        'theta', 'bias', 'Rcum', 'Ravg', 'Ravg_norm', 'MAX_ITER', ...
         'epsilon', 'eta', 'lambda', 'metadata', 'metadata_final');
     %for k=1:NUM_K
     %    X_pert = squeeze(bestX(k,:,:));
