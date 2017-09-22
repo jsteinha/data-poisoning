@@ -1,0 +1,18 @@
+load imdb/imdb_data_pool1.mat;
+beta = 0.3;
+n_train = size(X_train,1);
+d = size(X_train,2);
+%scale = (sum(abs(X_train),1)/n_train);
+%X_train = X_train ./ repmat(scale, [n_train 1]);
+%X_test = X_test ./ repmat(scale, [n_test 1]);
+%beta = norm(X_train, 'fro')^2 / n_train^2;
+t_lp = sdpvar(n_train, 1);
+theta_lp = sdpvar(d, 1);
+obj_lp = 0.5*beta*(theta_lp'*theta_lp) + sum(t_lp)/n_train;
+Constraint_lp = [t_lp >= 0; t_lp >= 1 - y_train .* (X_train * theta_lp)];
+optimize(Constraint_lp, obj_lp, sdpsettings('solver', 'gurobi', 'verbose', 2, 'showprogress', 1));
+rho = double(obj_lp) + delta;
+fprintf(1, 'optimal training loss: %.4f\ntraining loss constraint: %.4f\n', double(obj_lp), rho);
+theta_hat = double(theta_lp);
+fprintf(1, 'train accuracy: %.4f\n', sum(y_train .* (X_train * theta_hat) > 0) / n_train);
+fprintf(1, 'test accuracy: %.4f\n', sum(y_test .* (X_test * theta_hat) > 0) / n_test);

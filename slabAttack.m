@@ -76,7 +76,7 @@ function [bestLower, bestUpper, lower_bounds, upper_bounds] = slabAttack(name, e
 
         % every 10 iterations, try training against the current attack to
         % see how we do
-        if mod(iter, 10) == 0 || iter == MAX_ITER
+        if mod(iter, 5) == 0 || iter == MAX_ITER
             fprintf(1, 'Checking lower bound...\n');
             y_eps = [1 1 -1 -1];
             N_pert = round(epsilon * N_train);
@@ -140,6 +140,7 @@ function [bestLower, bestUpper, lower_bounds, upper_bounds] = slabAttack(name, e
     metadata_final = metadata{numUpper,1};
     save(sprintf('%s/attacks/%s_attack_eps%02d_slab', name, name, round(100*epsilon)), 'X_train', 'X_test', 'y_train', 'y_test', ...
         'theta', 'bias', 'Rcum', 'Ravg', 'Ravg_norm', 'MAX_ITER', ...
+        'bestX', 'bestY', 'bestV', ...
         'epsilon', 'eta', 'lambda', 'metadata', 'metadata_final');
     %for k=1:NUM_K
     %    X_pert = squeeze(bestX(k,:,:));
